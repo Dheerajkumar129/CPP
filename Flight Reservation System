@@ -1,0 +1,237 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <ctime>     // Include ctime for time(0)
+#include <cstdlib>   // Include cstdlib for rand() and srand()
+#include <iomanip>   // For formatting output
+
+using namespace std;
+
+// Class to represent a passenger
+class Passenger {
+public:
+    string name;
+    int age;
+    string passportNumber;
+
+    Passenger(string n, int a, string pn) : name(n), age(a), passportNumber(pn) {}
+};
+
+// Class to represent a flight
+class Flight {
+public:
+    string flightNumber;
+    string origin;
+    string destination;
+    string date;
+    string time;
+    double price;
+    int capacity;
+    int reserved;
+    vector<pair<string, Passenger>> reservations; // Booking ID and Passenger
+
+    Flight(string fn, string ori, string dest, string dt, string tm, double pr, int cap)
+        : flightNumber(fn), origin(ori), destination(dest), date(dt), time(tm), price(pr), capacity(cap), reserved(0) {}
+
+    // Function to check if seats are available
+    bool seatsAvailable() {
+        return reserved < capacity;
+    }
+
+    // Function to generate a unique booking ID
+    string generateBookingID() {
+        string bookingID = flightNumber + to_string(rand() % 10000);
+        return bookingID;
+    }
+
+    // Function to reserve a seat
+    void reserveSeat(Passenger passenger) {
+        if (seatsAvailable()) {
+            string bookingID = generateBookingID();
+            reservations.push_back(make_pair(bookingID, passenger));
+            reserved++;
+            cout << "\nSeat reserved successfully!\n";
+            cout << "Booking ID: " << bookingID << endl;
+            cout << "Total Cost: $" << fixed << setprecision(2) << price << endl;
+        } else {
+            cout << "Sorry, no seats available on this flight.\n";
+        }
+    }
+
+    // Function to cancel a reservation
+    void cancelReservation(string bookingID) {
+        bool found = false;
+        for (auto it = reservations.begin(); it != reservations.end(); ++it) {
+            if (it->first == bookingID) {
+                reservations.erase(it);
+                reserved--;
+                found = true;
+                cout << "Reservation cancelled successfully!\n";
+                break;
+            }
+        }
+        if (!found) {
+            cout << "Reservation not found.\n";
+        }
+    }
+
+    // Function to display flight details
+    void display() {
+        cout << "Flight Number: " << flightNumber << endl;
+        cout << "From: " << origin << " To: " << destination << endl;
+        cout << "Date: " << date << " Time: " << time << endl;
+        cout << "Ticket Price: $" << fixed << setprecision(2) << price << endl;
+        cout << "Seats Reserved/Total Capacity: " << reserved << "/" << capacity << endl;
+    }
+
+    // Function to display only the flight number and reservation status
+    void displayBasic() {
+        cout << flightNumber << " - Reserved: " << reserved << "/" << capacity << endl;
+    }
+
+    // Function to display all reservations for the flight
+    void displayAllReservations() {
+        cout << "Reservations for Flight " << flightNumber << ":\n";
+        if (reservations.empty()) {
+            cout << "No reservations yet.\n";
+        } else {
+            for (auto& res : reservations) {
+                cout << "Booking ID: " << res.first << ", Passenger: " << res.second.name
+                     << ", Passport Number: " << res.second.passportNumber << endl;
+            }
+        }
+    }
+};
+
+// Function to display menu options
+void displayMenu() {
+    cout << "\n========= Flight Reservation System Menu =========\n";
+    cout << "1. Book a seat\n";
+    cout << "2. Cancel a reservation\n";
+    cout << "3. View reservation details\n";
+    cout << "4. List all flights\n";
+    cout << "5. View all reservations for a flight\n";
+    cout << "6. Exit\n";
+    cout << "==================================================\n";
+    cout << "Enter your choice: ";
+}
+
+int main() {
+    srand(time(0));  // Initialize the random number generator
+
+    vector<Flight> flights;
+    flights.push_back(Flight("F001", "Patna", "New Delhi", "2024-09-10", "10:00 AM", 199.99, 100));
+    flights.push_back(Flight("F002", "Mumbai", "Chennai", "2024-09-12", "01:00 PM", 249.99, 120));
+    flights.push_back(Flight("F003", "Bangalore", "Dubai", "2024-09-15", "03:00 PM", 890.99, 80));
+    flights.push_back(Flight("F004", "Kolkata", "Hyderabad", "2024-09-18", "05:00 PM", 300.99, 130));
+
+    int choice;
+    do {
+        displayMenu();
+        cin >> choice;
+        switch (choice) {
+            case 1: {
+                // Reserve a seat
+                string flightNumber, name, phoneNumber;
+                int age;
+                cout << "Enter the flight number: ";
+                cin >> flightNumber;
+                cout << "Enter passenger name: ";
+                cin.ignore(); // To clear the newline character from previous input
+                getline(cin, name);
+                cout << "Enter passenger age: ";
+                cin >> age;
+                cout << "Enter phone number: ";
+                cin >> phoneNumber;
+
+                Passenger passenger(name, age, phoneNumber);
+
+                bool found = false;
+                for (Flight& flight : flights) {
+                    if (flight.flightNumber == flightNumber) {
+                        flight.reserveSeat(passenger);
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    cout << "Flight not found.\n";
+                }
+                break;
+            }
+            case 2: {
+                // Cancel a reservation
+                string flightNumber, bookingID;
+                cout << "Enter the flight number: ";
+                cin >> flightNumber;
+                cout << "Enter the booking ID: ";
+                cin >> bookingID;
+
+                bool found = false;
+                for (Flight& flight : flights) {
+                    if (flight.flightNumber == flightNumber) {
+                        flight.cancelReservation(bookingID);
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    cout << "Flight or Booking ID not found.\n";
+                }
+                break;
+            }
+            case 3: {
+                // View reservation details
+                string flightNumber;
+                cout << "Enter the flight number: ";
+                cin >> flightNumber;
+
+                bool found = false;
+                for (Flight& flight : flights) {
+                    if (flight.flightNumber == flightNumber) {
+                        flight.display();
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    cout << "Flight not found.\n";
+                }
+                break;
+            }
+            case 4:
+                // List all flights
+                cout << "\nAll Flights:\n";
+                for (Flight& flight : flights) {
+                    flight.displayBasic();
+                }
+                break;
+            case 5: {
+                // View all reservations for a flight
+                string flightNumber;
+                cout << "Enter the flight number: ";
+                cin >> flightNumber;
+
+                bool found = false;
+                for (Flight& flight : flights) {
+                    if (flight.flightNumber == flightNumber) {
+                        flight.displayAllReservations();
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    cout << "Flight not found.\n";
+                }
+                break;
+            }
+            case 6:
+                cout << "Exiting the program.\n";
+                break;
+            default:
+                cout << "Invalid choice. Please try again.\n";
+        }
+    } while (choice != 6);
+
+    return 0;
+}
